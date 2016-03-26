@@ -1,0 +1,3 @@
+# Include flask templates and static data
+recursive-include webrecords/static *
+recursive-include webrecords/templates *

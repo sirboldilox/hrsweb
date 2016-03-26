@@ -1,0 +1,17 @@
+/* CSS for index page (Patient List) */
+
+#content {
+    margin: 20px;
+}
+
+#content ul {
+    display: inline;
+}
+
+.entry {
+    width: 33%;
+    margin: 10px;
+    padding: 10px;
+    background: white;
+    font-size: 11pt;
+}

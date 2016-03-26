@@ -1,0 +1,21 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+  {% block head %}
+  <title>{% block title %}{% endblock %} - Health Reocrds</title>
+  <link rel="shortcut icon" href="/static/images/favicon.ico"></link>
+  <link rel="stylesheet" type="text/css" href={{ url_for("static", filename="css/main.css") }}></link>
+  <script type="text/javascript" src={{ url_for("static", filename="js/jquery.min.js") }}></script>
+  
+  {# Override this block for additional scripts #}
+  {% block scripts %}{% endblock %}
+
+  {% endblock %}
+</head>
+<body>
+  <div id="header">
+    <a href={{ url_for("index") }}><span>Patients</span></a>
+  </div>
+  <div id="content">{% block content %}{% endblock %}</div>
+</body>
+</html>
