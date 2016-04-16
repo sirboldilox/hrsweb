@@ -8,12 +8,11 @@ def read(fname):
 
 
 setup(
-    name = "WebRecords",
-    version = "1.0",
+    name = "hrsweb",
+    version = "0.2",
     author = "Matt Parker",
     author_email='m.parker-12@student.lboro.ac.uk',
     description = ("Web front end to the health record system database"),
-#    long_description = read("Readme.md"),
 
     license = "MIT",
     classifiers = [
@@ -36,7 +35,7 @@ setup(
     ],
 
     entry_points = {
-        'console_scripts': ['webrecords=webrecords.__main__:cmd_entry']
+        'console_scripts': ['hrsweb=hrsweb.__main__:cmd_entry']
     }
 
 )

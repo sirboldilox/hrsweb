@@ -4,8 +4,8 @@ Entry point script for the app
 import logging
 from configparser import Error as ConfigError
 
-from webrecords.app import webapp
-from webrecords.config import SiteConfig
+from hrsweb.app import webapp
+from hrsweb.config import SiteConfig
 
 # Defaults
 DEFAULT_CONFIG = './local.conf'
@@ -33,7 +33,7 @@ def main(config_file=DEFAULT_CONFIG):
     webapp.debug = config.getboolean('flask', 'debug', fallback=False)
 
     # Start the webserver
-    host  = config.get('flask', 'host', fallback='0.0.0.0')
+    host  = config.get('flask', 'bind', fallback='0.0.0.0')
     port  = config.getint('flask', 'port', fallback=8080)
     webapp.run(host=host, port=port)
 

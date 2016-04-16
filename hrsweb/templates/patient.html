@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Test Page{% endblock %}
+{% block title %}Patient Record{% endblock %}
+{% block headertitle %}Patient Record{% endblock %}
 
 {# Additional CSS and JS #}
 {% block scripts %}
@@ -11,14 +12,36 @@
 <script> var patientID = {{ patient['id'] }} </script>
 {% endblock %}
 
+{# Main page content #}
 {% block content %}
-<div id="wrapper">
-  <div id="info_wrapper">
-    <h1>{{ patient['first_name'] + ' ' + patient['last_name'] }}</h1>
+<div class="row">
+  <div class="col s3">
+    <div class="card-panel white">
+      <span class="card-title">{{ patient['first_name']|capitalize() }} {{ patient['last_name']|capitalize() }}</span>
+      <p>{{ patient['gender'] }}
+      <br>ID: {{ "%06d" % patient['id'] }}</p>
+    </div>
+  </div>
+  <div class="col s9">
+    <div class="card-panel col s9 white ">
+      <form>
+        <div class="input-field col s12">
+          <select>
+            <option value="height">Height</option>
+            <option value="weight">Weight</option>
+            <option value="blood pressure">Blood Pressure</option>
+            <option value="ecg">ECG</option>
+            <label>Biometric to display</label>
+          </select>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <div id="canvas_wrapper">
-    <canvas id="canvas" height="450" width="600"></canvas>
+  <div class="col s12">
+    <div id="canvas-wrapper" class="card-panel white">
+      <canvas id="canvas"></canvas>
+    </div>
   </div>
 </div>
 

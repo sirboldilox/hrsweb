@@ -6,6 +6,7 @@ function randomScalingFactor() {
     return Math.round(Math.random()*100);
 }
 
+
 var charConfig = {
     labels : [],
     datasets : [
@@ -23,21 +24,139 @@ var charConfig = {
 }
 
 /**
- * Fetch biometric data for this patient
  */
-function getBiometrics(patientID, biometricTypeID) {
+function resetCanvas() {
+    if(window.lineGraph != null) 
+        window.lineGraph.destroy();
+
+    var chartWrapper = document.getElementById("canvas-wrapper");
+    chartWrapper.innerHTML = '&nbsp';
+    $('#canvas-wrapper').append('<canvas id="canvas"></canvas>');
+
+    window.graphctx = $('#canvas').get(0).getContext('2d');
+}
+
+/**
+ * Handles the biometric type select entity
+ */
+function typeSelectHandler() {
+    var type = $("select option:selected")[0].value;
+    console.log(type);
+    drawBiometrics(patientID, type);
+}
+
+/**
+ *  Resets and draws a line graph using the data provided
+ *  @param data:    Graph data
+ */
+function drawLineGraph(data, label) {
+    resetCanvas()
+    window.lineGraph = new Chart(window.graphctx).Line({
+        labels : [],
+        datasets : [
+            {
+                label: label,
+                fillColor : "rgba(220,220,220,0.2)",
+                strokeColor : "rgb(33,150,243)",
+                pointColor : "rgba(33,150,243,1)",
+                pointStrokeColor : "#fff",
+                pointHighlightFill : "#fff",
+                pointHighlightStroke : "rgba(220,220,220,1)",
+                data: []
+            },
+        ]
+    },
+    {
+        responsive: true
+    }); 
+
+    var len = data.value.length
+    for(var i=0; i<len; i++) {
+        window.lineGraph.addData([data.value[i]], data.time[i]);
+    }
+    window.lineGraph.update();
+}
+
+/**
+ *  Resets and draws a line graph with 2 datasets using the data provided
+ *  for blood pressure
+ *  @param data1:   Graph data for line 1
+ *  @param data2:   Graph data for line 2
+ */
+function drawBPGraph(data1, data2, time) {
+    resetCanvas();
+    window.lineGraph = new Chart(window.graphctx).Line({
+        labels : [],
+        datasets : [
+            {
+                label: "Systolic Pressure",
+                fillColor : "rgba(220,220,220,0.2)",
+                strokeColor : "rgb(33,150,243)",
+                pointColor : "rgba(33,150,243,1)",
+                pointStrokeColor : "#fff",
+                pointHighlightFill : "#fff",
+                pointHighlightStroke : "rgba(220,220,220,1)",
+                data: []
+            },
+            {
+                label: "Diastolic Pressure",
+                fillColor : "rgba(120,120,120,0.2)",
+                strokeColor : "rgba(229,28,35,1)",
+                pointColor : "rgba(229,28,35,1)",
+                pointStrokeColor : "#fff",
+                pointHighlightFill : "#fff",
+                pointHighlightStroke : "rgba(220,220,220,1)",
+                data: []
+            },
+        ]
+    },
+    {
+        responsive: true
+    }); 
+    var len = data1.length
+
+    for(var i=0; i<len; i++) {
+        window.lineGraph.addData([data1[i], data2[i]], time[i]);
+    }
+    window.lineGraph.update();
+}
+
+/**
+ * Fetch biometric data for this patient
+ * @param patientID:        ID of the patient
+ * @param biometricType:    Name of the biometric type
+ */
+function drawBiometrics(patientID, biometricType) {
     $.get("/api/biometrics", {
             patient_id: patientID,
-            biometric_type_id: biometricTypeID
+            type: biometricType
         },
         function (response) {
             if (response) {
                 var result = response.response;
-                var len = result.value.length
-                for(var i=0; i<len; i++) {
-                    window.lineGraph.addData([result.value[i]], result.time[i]);
+                
+                /**
+                 * Handle splitting the bp data into 2 datasets
+                 * From the database the data is stored as a fraction in a sting
+                 * E.G:" 80/100"
+                 */
+                if (biometricType == "blood pressure") {
+                    var data1 = []
+                    var data2 = []
+
+                    var len = result.value.length
+                    for(var i=0; i<len; i++) {
+                        var res = result.value[i].split("/")
+                        data1[i] = res[0]
+                        data2[i] = res[1]
+                    }
+                        
+                    drawBPGraph(data1, data2, result.time)
                 }
-                window.lineGraph.update();
+                else {
+                    drawLineGraph(result, biometricType)
+                }
+
             }
         },
         'json'
@@ -49,13 +168,14 @@ function getBiometrics(patientID, biometricTypeID) {
 var staticData =  [randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor()]
 
 window.onload = function() {
-    var ctx = document.getElementById("canvas").getContext("2d");
-    //var biometricData = staticData
-    
-    window.lineGraph = new Chart(ctx).Line(charConfig, {
-        responsive: true
-    });
 
-    var biometricData = getBiometrics(patientID, 0);
+    /* Initialise elements */
+    $('.button-collapse').sideNav({'edge' : 'left'});
+    $('select').material_select();
+    $('select').change(typeSelectHandler);
+
+    /* Initialise chart */
+    window.lineGraph = null
+    drawBiometrics(patientID, 'height');
 }
 

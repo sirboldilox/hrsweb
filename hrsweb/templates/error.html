@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+{% block headertitle %}Error{% endblock %}
+
+{# Additional CSS and JS #}
+{% block scripts %}
+<link rel="stylesheet" type="text/css" href={{ url_for("static", filename="css/error.css") }}></link>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="section">
+    <h4 class="header">Application error</h4>
+    <div class="divider"></div>
+  </div>
+  <div class="section col s12">
+    <div class="row">
+      <h6 class="red-text">  {{ error }} </h6>
+    </div>
+  </div>
+</div>
+{% endblock %}

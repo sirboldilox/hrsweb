@@ -4,8 +4,8 @@ Webserver
 from collections import OrderedDict
 from flask import Flask, url_for, redirect, render_template, request
 
-from webrecords.api import load_api
-from webrecords.hrsdb import HRSDB
+from hrsweb.api import load_api
+from hrsweb.hrsdb import HRSDB, APIError
 
 
 # Global web app
@@ -13,7 +13,7 @@ webapp = Flask(__name__)
 load_api(webapp)
 
 # Move this to the CONFIG
-HRSDB_BASE_URL = 'http://hrsdb0:8080'
+HRSDB_BASE_URL = 'http://localhost:8080'
 
 # Dummy patient list
 dummy_patients = {
@@ -22,14 +22,23 @@ dummy_patients = {
     3 : "Test 3"
 }
 
+# Error page
+def error(msg):
+    return render_template('error.html', error=msg)
 
 # Default page
 @webapp.route('/')
-def index():
+def patients_list():
     base_url = HRSDB_BASE_URL
     hrsdb = HRSDB(base_url)
-    patients = hrsdb.getPatients()
-    return render_template('index.html', patients=patients)
+        
+    patients = None
+    try:
+        patients = hrsdb.getPatients()
+    except APIError as exc:
+        return error(repr(exc))
+
+    return render_template('patient_list.html', patients=patients)
 
 
 # Route for search receipts page
@@ -38,7 +47,21 @@ def patient():
     patient_id = int(request.args.get('id'))
     base_url = HRSDB_BASE_URL
     hrsdb = HRSDB(base_url)
-    patient = hrsdb.getPatient(patient_id)
 
-    print(patient_id)
-    return render_template('patient.html', patient=patient)
+    error = None
+    patient = None
+    try:
+        patient = hrsdb.getPatient(patient_id)
+    except APIError as exc:
+        error = str(exc)
+
+    print(patient)
+
+    # Convert gender int to string
+    if patient['gender'] == 0:
+        patient['gender'] = 'Male'
+    else:
+        patient['gender'] = 'Female'
+
+    return render_template('patient.html', patient=patient, error=error)
+

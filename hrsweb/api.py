@@ -7,11 +7,11 @@ Internal API:
 from flask import jsonify, request, current_app
 from flask_restful import Api, Resource, reqparse
 
-from webrecords.hrsdb import HRSDB
+from hrsweb.hrsdb import HRSDB
 
 
 # Move this to the CONFIG
-HRSDB_BASE_URL = 'http://hrsdb0:8080'
+HRSDB_BASE_URL = 'http://localhost:8080'
 base_url = HRSDB_BASE_URL
 
 
@@ -22,8 +22,11 @@ class BiometricsAPI(Resource):
 
     """
     parser = reqparse.RequestParser()
-    parser.add_argument('patient_id')
-    parser.add_argument('type_id')
+    parser.add_argument('patient_id', type=int)
+    parser.add_argument('type')
+
+    bio_types = None
+
 
     def get(self):
 
@@ -31,8 +34,17 @@ class BiometricsAPI(Resource):
         args = self.parser.parse_args(strict=True)
 
         hrsdb = HRSDB(base_url)
+        rbio_types = hrsdb.getBiometricTypes()
+        bio_types = { rbio_type['type']: rbio_type['id'] for rbio_type in rbio_types}
+        print(bio_types)
+
+        # Invalid biometric type
+        if not args.type in bio_types.keys():
+            return jsonify({})      
+
+
         biometrics = hrsdb.getBiometrics(
-            args.patient_id, args.type_id
+            args.patient_id, bio_types[args.type]
         )
 
         graph_biometrics = {

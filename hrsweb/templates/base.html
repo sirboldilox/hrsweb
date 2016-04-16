@@ -4,8 +4,19 @@
   {% block head %}
   <title>{% block title %}{% endblock %} - Health Reocrds</title>
   <link rel="shortcut icon" href="/static/images/favicon.ico"></link>
+
+  <!--Import Google Icon Font-->
+  <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+  <!-- Materialize -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+
   <link rel="stylesheet" type="text/css" href={{ url_for("static", filename="css/main.css") }}></link>
-  <script type="text/javascript" src={{ url_for("static", filename="js/jquery.min.js") }}></script>
+<!--  <script type="text/javascript" src={{ url_for("static", filename="js/jquery.min.js") }}></script>-->
   
   {# Override this block for additional scripts #}
   {% block scripts %}{% endblock %}
@@ -13,9 +24,21 @@
   {% endblock %}
 </head>
 <body>
-  <div id="header">
-    <a href={{ url_for("index") }}><span>Patients</span></a>
-  </div>
-  <div id="content">{% block content %}{% endblock %}</div>
+  <header>
+    <div class="navbar-fixed">
+      <nav class="blue">
+        <div class="container">
+          <div class="nav-wrapper">
+            <a class="page-title" href={{ url_for("patients_list") }}>
+              Health Records - {% block headertitle %}{% endblock %}
+            </a>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="container">{% block content %}{% endblock %}</div>
+  </main>
 </body>
 </html>
