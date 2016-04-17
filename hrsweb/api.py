@@ -35,24 +35,37 @@ class BiometricsAPI(Resource):
 
         hrsdb = HRSDB(base_url)
         rbio_types = hrsdb.getBiometricTypes()
-        bio_types = { rbio_type['type']: rbio_type['id'] for rbio_type in rbio_types}
-        print(bio_types)
+
+        # Sort by name for lookup.
+        # name: {
+        #  "id": 0
+        #  "units": m 
+        # }
+        bio_types = { rbio_type['name']: { 
+                            "id":    rbio_type['id'],
+                            "units": rbio_type['units']
+                        }
+                        for rbio_type in rbio_types
+                    }
 
         # Invalid biometric type
         if not args.type in bio_types.keys():
             return jsonify({})      
 
-
+        # Fetch biometrics for this patient and biometric type
+        bio_type = bio_types[args.type]
+        print(bio_type)
         biometrics = hrsdb.getBiometrics(
-            args.patient_id, bio_types[args.type]
+            args.patient_id, bio_type['id']
+
         )
 
         graph_biometrics = {
             "value": [],
-            "time" : []
+            "time" : [],
+            "units": bio_type['units']
         }
 
-        print("Got back this: %s" % str(biometrics))
         for biometric in biometrics:
             graph_biometrics["value"].append(biometric['value'])
             graph_biometrics["time"].append(biometric['timestamp'])

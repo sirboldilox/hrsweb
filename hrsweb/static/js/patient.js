@@ -2,28 +2,16 @@
 // patientID:   Global variable set by flask
 
 
-function randomScalingFactor() {
-    return Math.round(Math.random()*100);
-}
-
-
-var charConfig = {
-    labels : [],
-    datasets : [
-        {
-            label: "Dataset",
-            fillColor : "rgba(220,220,220,0.2)",
-            strokeColor : "rgba(220,220,220,1)",
-            pointColor : "rgba(220,220,220,1)",
-            pointStrokeColor : "#fff",
-            pointHighlightFill : "#fff",
-            pointHighlightStroke : "rgba(220,220,220,1)",
-            data: []
-        },
-    ]
+/**
+ * Handles updates to the biometric type select entity
+ */
+function typeSelectHandler() {
+    var type = $("select option:selected")[0].value;
+    drawBiometrics(patientID, type);
 }
 
 /**
+ * Resets the canvas HTML5 tag to clear the previous graph
  */
 function resetCanvas() {
     if(window.lineGraph != null) 
@@ -37,26 +25,23 @@ function resetCanvas() {
 }
 
 /**
- * Handles the biometric type select entity
- */
-function typeSelectHandler() {
-    var type = $("select option:selected")[0].value;
-    console.log(type);
-    drawBiometrics(patientID, type);
-}
-
-/**
  *  Resets and draws a line graph using the data provided
- *  @param data:    Graph data
+ *  @param data:    Graph data formatted as follows:
+ *      {
+ *          "value": [ <value1>, <value2>]
+ *          "time":  [ <time1>, <time2> ]
+ *          "units": <units>
+ *      }
  */
 function drawLineGraph(data, label) {
-    resetCanvas()
+    resetCanvas();
+    console.log(data);
     window.lineGraph = new Chart(window.graphctx).Line({
         labels : [],
         datasets : [
             {
                 label: label,
-                fillColor : "rgba(220,220,220,0.2)",
+                fillColor : "rgba(0,0,0,0)",
                 strokeColor : "rgb(33,150,243)",
                 pointColor : "rgba(33,150,243,1)",
                 pointStrokeColor : "#fff",
@@ -67,7 +52,8 @@ function drawLineGraph(data, label) {
         ]
     },
     {
-        responsive: true
+        responsive: true,
+        tooltipTemplate: "<%=label%>: <%=value%> " + data.units,
     }); 
 
     var len = data.value.length
@@ -90,7 +76,7 @@ function drawBPGraph(data1, data2, time) {
         datasets : [
             {
                 label: "Systolic Pressure",
-                fillColor : "rgba(220,220,220,0.2)",
+                fillColor : "rgba(0,0,0,0)",
                 strokeColor : "rgb(33,150,243)",
                 pointColor : "rgba(33,150,243,1)",
                 pointStrokeColor : "#fff",
@@ -100,7 +86,7 @@ function drawBPGraph(data1, data2, time) {
             },
             {
                 label: "Diastolic Pressure",
-                fillColor : "rgba(120,120,120,0.2)",
+                fillColor : "rgba(0,0,0,0)",
                 strokeColor : "rgba(229,28,35,1)",
                 pointColor : "rgba(229,28,35,1)",
                 pointStrokeColor : "#fff",
@@ -111,7 +97,8 @@ function drawBPGraph(data1, data2, time) {
         ]
     },
     {
-        responsive: true
+        responsive: true,
+        multiTooltipTemplate: "<%= label %> - <%= value %> mm Hg"
     }); 
     var len = data1.length
 
@@ -151,10 +138,10 @@ function drawBiometrics(patientID, biometricType) {
                         data2[i] = res[1]
                     }
                         
-                    drawBPGraph(data1, data2, result.time)
+                    drawBPGraph(data1, data2, result.time, result.units)
                 }
                 else {
-                    drawLineGraph(result, biometricType)
+                    drawLineGraph(result, biometricType, result.units)
                 }
 
             }
@@ -164,9 +151,7 @@ function drawBiometrics(patientID, biometricType) {
 
 }
 
-// Static data
-var staticData =  [randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor()]
-
+// Entry point on load
 window.onload = function() {
 
     /* Initialise elements */
