@@ -98,7 +98,8 @@ function drawBPGraph(data1, data2, time) {
     },
     {
         responsive: true,
-        multiTooltipTemplate: "<%= label %> - <%= value %> mm Hg"
+        multiTooltipTemplate: "<%=datasetLabel%> - <%=value%> mm Hg"
+
     }); 
     var len = data1.length
 
