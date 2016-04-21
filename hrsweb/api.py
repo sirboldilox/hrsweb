@@ -84,6 +84,68 @@ class BiometricsAPI(Resource):
         api.add_resource(BiometricsAPI, '/api/biometrics')
 
 
+class ECGAPI(Resource):
+    """
+    API handler for returning basic ECG data for a patient
+        GET    /api/ecg
+
+    """
+    parser = reqparse.RequestParser()
+    parser.add_argument('patient_id', type=int, required=True)
+
+    def get(self):
+        """Fetch a list of ECG timestamps with id's for this patient"""
+        args = self.parser.parse_args(strict=True)
+
+        hrsdb = HRSDB(base_url)
+        ecg_records = hrsdb.getECGs(args.patient_id)
+
+        # Return JSON response
+        response = {
+            'response': [
+                {
+                    'id': record['id'],
+                    'timestamp': record['timestamp']
+                }
+            for record in ecg_records]
+        }
+
+        print("Sending: %s" % str(response))
+        return jsonify(response)
+
+    @staticmethod
+    def add(api):
+        api.add_resource(ECGAPI, '/api/ecg')
+
+
+class ECGDataAPI(Resource):
+    """
+    API handler for returning ECG graph data for a patient
+        GET    /api/ecgdata
+
+    """
+    parser = reqparse.RequestParser()
+    parser.add_argument('data_id', type=int, required=True)
+
+    def get(self):
+        """Fetch a data set for a given id"""
+        args = self.parser.parse_args(strict=True)
+
+        hrsdb = HRSDB(base_url)
+        ecgdata = hrsdb.getECGData(args.data_id)
+
+        # Return JSON response
+        response = {
+            'response': ecgdata
+        }
+
+        print("Sending: %s" % str(response))
+        return jsonify(response)
+
+    @staticmethod
+    def add(api):
+        api.add_resource(ECGDataAPI, '/api/ecgdata')
+
 # Load the api
 def load_api(app):
     api = Api(app)

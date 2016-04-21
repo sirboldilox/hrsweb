@@ -5,7 +5,10 @@
 {# Additional CSS and JS #}
 {% block scripts %}
 <link rel="stylesheet" type="text/css" href={{ url_for("static", filename="css/patient.css") }}></link>
-<script type="text/javascript" src={{ url_for("static", filename="js/Chart.min.js") }}></script>
+<!--<script type="text/javascript" src={{ url_for("static", filename="js/Chart.min.js") }}></script>-->
+
+<script type="text/javascript" src={{ url_for("static", filename="js/moment.min.js") }}></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.0.0/Chart.js"></script>
 <script type="text/javascript" src={{ url_for("static", filename="js/patient.js") }}></script>
 
 {# Pass patientID to JS #}
@@ -15,23 +18,30 @@
 {# Main page content #}
 {% block content %}
 <div class="row">
-  <div class="col s3">
-    <div class="card-panel white">
-      <span class="card-title">{{ patient['first_name']|capitalize() }} {{ patient['last_name']|capitalize() }}</span>
-      <p>{{ patient['gender'] }}
-      <br>ID: {{ "%06d" % patient['id'] }}</p>
+  <div class="col s4">
+    <div id="info" class="card-panel white col s12">
+      <div class="col s8">{{ patient.get_name() }}</div>
+      <div class="col s4">ID: {{ "%06d" % patient.id }}</div>
+      <div class="col s12 divider"></div>
+      <div class="col s8">{{ patient.get_gender() }}</div>
+      <div class="col s4">Age: {{ patient.get_age() }}</div>
     </div>
   </div>
-  <div class="col s9">
-    <div class="card-panel col s9 white ">
+  <div class="col s8">
+    <div class="card-panel col s12 white ">
       <form>
         <div class="input-field col s12">
-          <select>
+          <select id="typeSelect">
             <option value="height">Height</option>
             <option value="weight">Weight</option>
-            <option value="blood pressure">Blood Pressure</option>
+            <option value="blood pressure">Blood pressure</option>
             <option value="ecg">ECG</option>
-            <label>Biometric to display</label>
+            <label>biometric to display</label>
+          </select>
+        </div>
+        <div class="input-field col s12" id="ecgSelectWrapper">
+          <select id="ecgSelect">
+            <label>ECG Reading to display</label>
           </select>
         </div>
       </form>

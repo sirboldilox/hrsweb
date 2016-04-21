@@ -6,9 +6,26 @@
  * Handles updates to the biometric type select entity
  */
 function typeSelectHandler() {
-    var type = $("select option:selected")[0].value;
-    drawBiometrics(patientID, type);
+    var type = $("#typeSelect option:selected")[0].value;
+    if (type == 'ecg') {
+        $('#ecgSelectWrapper').show();
+        ecgSelectHandler();
+    } else {
+        $('#ecgSelectWrapper').hide();
+       drawBiometrics(patientID, type);
+    }
+
 }
+
+/**
+ * Handles updates to the ecg select entity
+ */
+function ecgSelectHandler() {
+    var selected = $("#ecgSelect option:selected")[0].value;
+    console.log(selected);
+    drawECG(selected);
+}
+
 
 /**
  * Resets the canvas HTML5 tag to clear the previous graph
@@ -16,12 +33,6 @@ function typeSelectHandler() {
 function resetCanvas() {
     if(window.lineGraph != null) 
         window.lineGraph.destroy();
-
-    var chartWrapper = document.getElementById("canvas-wrapper");
-    chartWrapper.innerHTML = '&nbsp';
-    $('#canvas-wrapper').append('<canvas id="canvas"></canvas>');
-
-    window.graphctx = $('#canvas').get(0).getContext('2d');
 }
 
 /**
@@ -35,32 +46,36 @@ function resetCanvas() {
  */
 function drawLineGraph(data, label) {
     resetCanvas();
-    console.log(data);
-    window.lineGraph = new Chart(window.graphctx).Line({
-        labels : [],
-        datasets : [
-            {
-                label: label,
-                fillColor : "rgba(0,0,0,0)",
-                strokeColor : "rgb(33,150,243)",
-                pointColor : "rgba(33,150,243,1)",
-                pointStrokeColor : "#fff",
-                pointHighlightFill : "#fff",
-                pointHighlightStroke : "rgba(220,220,220,1)",
-                data: []
-            },
-        ]
-    },
-    {
-        responsive: true,
-        tooltipTemplate: "<%=label%>: <%=value%> " + data.units,
-    }); 
 
-    var len = data.value.length
-    for(var i=0; i<len; i++) {
-        window.lineGraph.addData([data.value[i]], data.time[i]);
+    // Chart data
+    var data = {
+        labels: data.time,
+        datasets: [{
+            label: label,
+            fill: false,
+            borderColor: "rgba(33,150,243,1)",
+            data: data.value
+        }]
     }
-    window.lineGraph.update();
+
+    // Chart options
+    var options = {
+        responsive: true,
+        scales: {
+            yAxis: [{
+                scaleLabel: {
+                    labelString: label
+                }
+            }]
+        }
+    }
+
+
+    window.lineGraph = new Chart(window.graphctx, {
+        type: 'line',
+        data: data,
+        options: options
+    }); 
 }
 
 /**
@@ -71,43 +86,88 @@ function drawLineGraph(data, label) {
  */
 function drawBPGraph(data1, data2, time) {
     resetCanvas();
-    window.lineGraph = new Chart(window.graphctx).Line({
-        labels : [],
-        datasets : [
-            {
-                label: "Systolic Pressure",
-                fillColor : "rgba(0,0,0,0)",
-                strokeColor : "rgb(33,150,243)",
-                pointColor : "rgba(33,150,243,1)",
-                pointStrokeColor : "#fff",
-                pointHighlightFill : "#fff",
-                pointHighlightStroke : "rgba(220,220,220,1)",
-                data: []
-            },
-            {
-                label: "Diastolic Pressure",
-                fillColor : "rgba(0,0,0,0)",
-                strokeColor : "rgba(229,28,35,1)",
-                pointColor : "rgba(229,28,35,1)",
-                pointStrokeColor : "#fff",
-                pointHighlightFill : "#fff",
-                pointHighlightStroke : "rgba(220,220,220,1)",
-                data: []
-            },
-        ]
-    },
-    {
-        responsive: true,
-        multiTooltipTemplate: "<%=datasetLabel%> - <%=value%> mm Hg"
 
-    }); 
-    var len = data1.length
+    // Chart data
+    var data = {
+        labels: time,
+        datasets: [{
+            label: "Systolic Pressure",
+            fill: false,
+            borderColor: "rgba(33,150,243,1)",
+            data: data1
+        },
+        {
+            label: "Diastolic Pressure",
+            fill: false,
+            borderColor : "rgba(229,28,35,1)",
+            data: data2
 
-    for(var i=0; i<len; i++) {
-        window.lineGraph.addData([data1[i], data2[i]], time[i]);
+        }]
     }
-    window.lineGraph.update();
+
+    // Chart options
+    var options = {
+        responsive: true,
+        multiTooltipTemplate: "<%=datasetLabel%> - <%=value%> mm Hg",
+
+        scales: {
+            xAxis: [{
+                scaleLabel: {
+                    labelString: "mm Hg"
+                }
+            }]
+        }
+    }
+
+    window.lineGraph = new Chart(window.graphctx, {
+        type: 'line',
+        data: data,
+        options: options
+    }); 
 }
+
+/**
+ *  Resets and draws a line graph with an ECG datasets using the data provided
+ *  @param data:   Graph data for ECG graph from api
+ */
+function drawECGGraph(data) {
+    resetCanvas();
+
+    // Chart data
+    var data = {
+        labels: Array.apply(null, Array(data.length)).map(function (_, i) {return i;}),
+        datasets: [{
+            label: "ECG",
+            fill: false,
+            borderColor: "rgba(33,150,243,1)",
+            data: data
+        }]
+    }
+
+    // Chart options
+    var options = {
+        responsive: true,
+        tooltipTemplate: "<%=label%>: <%=value%> " + data.unit,
+        title: {
+            text: "ECG"
+        },
+        scales: {
+            xAxis: [{
+                scaleLabel: {
+                    labelString: "mV"
+                }
+            }]
+        }
+    }
+
+
+    window.lineGraph = new Chart(window.graphctx, {
+        type: 'line',
+        data: data,
+        options: options
+    }); 
+}
+
 
 /**
  * Fetch biometric data for this patient
@@ -129,20 +189,20 @@ function drawBiometrics(patientID, biometricType) {
                  * E.G:" 80/100"
                  */
                 if (biometricType == "blood pressure") {
-                    var data1 = []
-                    var data2 = []
+                    var data1 = [];
+                    var data2 = [];
 
-                    var len = result.value.length
+                    var len = result.value.length;
                     for(var i=0; i<len; i++) {
-                        var res = result.value[i].split("/")
-                        data1[i] = res[0]
-                        data2[i] = res[1]
+                        var res = result.value[i].split("/");
+                        data1[i] = res[0];
+                        data2[i] = res[1];
                     }
                         
-                    drawBPGraph(data1, data2, result.time, result.units)
+                    drawBPGraph(data1, data2, result.time, result.units);
                 }
                 else {
-                    drawLineGraph(result, biometricType, result.units)
+                    drawLineGraph(result, biometricType, result.units);
                 }
 
             }
@@ -152,16 +212,63 @@ function drawBiometrics(patientID, biometricType) {
 
 }
 
+
+/**
+ * Fetch ecg data for a specific IDt
+ * @param dataID:        ID of the ECG data record to draw
+ */
+function drawECG(dataID) {
+    $.get("/api/ecgdata", {
+            data_id: dataID,
+        },
+        function (response) {
+            if (response) {
+                var result = response.response;
+                drawECGGraph(result);
+            }
+
+        },
+        'json'
+    );
+
+}
+
 // Entry point on load
 window.onload = function() {
 
-    /* Initialise elements */
+    /* Initialise core elements */
     $('.button-collapse').sideNav({'edge' : 'left'});
-    $('select').material_select();
-    $('select').change(typeSelectHandler);
+    $('#typeSelect').material_select();
+    $('#typeSelect').change(typeSelectHandler);
+
+    /* Initialise ECG selector */
+    $('#ecgSelect').change(ecgSelectHandler);
+    $('#ecgSelectWrapper').hide();
+
+    /* Populate options */
+    $.get("/api/ecg", {
+            patient_id: patientID,
+        },
+        function (response) {
+            if (response) {
+                var result = response.response;
+                var len = result.length;
+                var select = $('#ecgSelect');
+
+                for(var i=0; i<len; i++) {
+                    var opt = document.createElement('option');
+                    opt.value = result[i].id;
+                    opt.innerHTML = result[i].timestamp;
+                    select.append(opt);
+                }
+                select.material_select();
+            }
+        }, 'json'
+     );
 
     /* Initialise chart */
-    window.lineGraph = null
+    window.graphctx = $('#canvas').get(0).getContext('2d');
+    window.lineGraph = null;
     drawBiometrics(patientID, 'height');
 }
 

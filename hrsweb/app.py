@@ -2,10 +2,12 @@
 Webserver
 """
 from collections import OrderedDict
+from datetime import datetime
 from flask import Flask, url_for, redirect, render_template, request
 
 from hrsweb.api import load_api
 from hrsweb.hrsdb import HRSDB, APIError
+from hrsweb.models import Patient
 
 
 # Global web app
@@ -44,24 +46,19 @@ def patients_list():
 # Route for search receipts page
 @webapp.route('/patient')
 def patient():
+
     patient_id = int(request.args.get('id'))
     base_url = HRSDB_BASE_URL
     hrsdb = HRSDB(base_url)
 
-    error = None
     patient = None
     try:
         patient = hrsdb.getPatient(patient_id)
     except APIError as exc:
-        error = str(exc)
+        print(repr(exc))
+        return error(repr(exc))
 
-    print(patient)
-
-    # Convert gender int to string
-    if patient['gender'] == 0:
-        patient['gender'] = 'Male'
-    else:
-        patient['gender'] = 'Female'
-
-    return render_template('patient.html', patient=patient, error=error)
+    # Build patient model for template
+    patient_model = Patient.from_dict(patient)
+    return render_template('patient.html', patient=patient_model)
 

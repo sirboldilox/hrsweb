@@ -5,7 +5,7 @@ Wrapper around the REST api for HRSDB
 """
 import logging
 import requests
-from requests.exceptions import ConnectionError, Timeout
+from requests.exceptions import ConnectionError, Timeout, HTTPError
 
 # Log adapter
 logs = logging.getLogger(__name__)
@@ -56,7 +56,26 @@ class HRSDB(object):
         url = "%s/biometric_types" % (self.base_url)
 
         return self._call(url, self.GET)
-        
+
+    def getECGs(self, patient_id):
+        """Get all ecg records (without raw data) for a patient"""
+
+        url = "%s/ecg" % (self.base_url)
+        data = {
+            'patient_id': patient_id
+        }
+
+        return self._call(url, self.GET, data=data)
+
+    def getECGData(self, data_id):
+        """Get raw ECG data for graphing for a given id"""
+
+        url = "%s/ecgdata" % (self.base_url)
+        data = {
+            'id': data_id
+        }
+
+        return self._call(url, self.GET, data=data)
 
     def _call(self, url, method, data=None):
         """Call the request and handle errors"""
@@ -69,12 +88,15 @@ class HRSDB(object):
                 req = requests.post(url, data=data, timeout=self.DEFAULT_TIMEOUT)
             elif method is self.PUT:
                 req = requests.put(url, data=data, timeout=self.DEFAULT_TIMEOUT)
+
+            # Check status code
+            req.raise_for_status()
         except ConnectionError as error:
             raise APIError("Failed to connect to remote database")
         except Timeout as error:
             raise APIError("Failed to connect to remote database (T)")
-
-        print(req.text)
+        except HTTPError as error:
+            raise APIError("Unknown record")
 
         json = req.json()
         return json['response']
